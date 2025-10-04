@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, Any
@@ -5,7 +6,6 @@ import uuid
 
 from .models import EmailIn, EmailPendingOut
 from . import services
-
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Mail Triage Backend", version="0.3.0")
@@ -41,7 +41,6 @@ def create_app() -> FastAPI:
 
     return app
 
-
 async def _process_email_task(email_id: str, title: str, content: str) -> None:
     try:
         output = await services.process_email(email_id, title, content)
@@ -56,5 +55,4 @@ async def _process_email_task(email_id: str, title: str, content: str) -> None:
             "classification": "Error",
             "suggested_reply": "Processing failed. Please retry.",
         }
-
 

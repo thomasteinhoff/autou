@@ -6,7 +6,6 @@ An intelligent email classification and response generation application that use
 
 - **AI-Powered Classification**: Uses Google Gemini API to classify emails as Productive or Unproductive
 - **Smart Response Generation**: Automatically generates contextual email responses
-- **Fallback System**: Local heuristic classification when AI is unavailable
 - **File Upload Support**: Upload .txt and .pdf files for email content
 - **Modern UI**: Clean, responsive interface built with Tailwind CSS
 - **Real-time Processing**: Asynchronous background processing with status updates
@@ -63,11 +62,12 @@ GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-1.5-flash
 ```
 
-**Note**: The application works without a Gemini API key using local heuristics, but AI-powered classification and response generation will be disabled.
+
+**Note**: The application now requires a Gemini API key for classification and response generation. Offline/local classification is no longer supported.
 
 ### 5. Start the Backend Server
 ```bash
-# From the project root
+# From the project rootp
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
@@ -125,15 +125,23 @@ Get the processing status and results
 ## 🧠 AI Integration
 
 ### Gemini API Configuration
-- **Model**: gemini-1.5-flash (configurable)
+- **Model**: gemini-2.5-flash
 - **Temperature**: 0.4 for consistent responses
 - **Max Tokens**: 256 for response generation
-- **Timeout**: 15 seconds with 5-second connection timeout
 
-### Fallback System
-When Gemini API is unavailable:
-- **Classification**: Uses local keyword-based heuristics
-- **Response**: Provides generic templates based on classification
+#### Important: Gemini Model Version
+
+You must set the following in your `.env` file for the application to work correctly:
+
+```
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+Other model versions may not work with this backend.
+
+
+### Classification System
+Classification and response generation are performed exclusively via the Gemini API. Offline/local fallback heuristics are no longer used.
 
 ### Supported Languages
 - English
@@ -151,6 +159,7 @@ autou/
 │   └── services.py     # AI processing and business logic
 ├── venv/               # Python virtual environment
 ├── index.html          # Frontend HTML
+├── theme.css           # Theme classes and variables
 ├── app.js              # Frontend JavaScript logic
 ├── api.js              # API communication layer
 ├── requirements.txt    # Python dependencies
@@ -186,20 +195,14 @@ autou/
 
 - [ ] Database persistence (currently in-memory)
 - [ ] Email provider integration (Gmail, Outlook)
-- [ ] User authentication and multi-tenancy
 - [ ] Advanced AI features (sentiment analysis, priority scoring)
 - [ ] Bulk email processing
 - [ ] Search and filtering capabilities
 - [ ] Export functionality
-- [ ] Mobile app version
 
 ## 📄 License
 
-This project is part of the AutoU case study for development assessment.
-
-## 🤝 Contributing
-
-This is a case study project. For questions or issues, please refer to the project documentation or contact the development team.
+This project is personal of mine to demonstrate python features and front end integrations, feel free to use anything since this will serve as portifolio.
 
 ---
 

@@ -1,16 +1,8 @@
 from typing import Dict, Any, List
-import os
-import re
-import string
-import asyncio
-import httpx
+import os, re, string, asyncio, httpx
 
-
-# ---------------- In-memory storage (replaceable) ----------------
 results: Dict[str, Dict[str, Any]] = {}
 
-
-# ---------------- .env loader (no external deps) ----------------
 def _load_env_file(path: str = ".env") -> None:
     try:
         if not os.path.exists(path):
@@ -28,14 +20,10 @@ def _load_env_file(path: str = ".env") -> None:
                 if key and value and key not in os.environ:
                     os.environ[key] = value
     except Exception:
-        # Silently ignore .env parsing issues to avoid breaking startup
         pass
 
-# Load .env early
 _load_env_file()
 
-
-# ---------------- NLP Preprocessing ----------------
 _DEFAULT_STOPWORDS: List[str] = [
     # English
     "a", "an", "the", "and", "or", "but", "if", "while", "of", "to", "in", "on", "for",
@@ -65,7 +53,6 @@ _DEFAULT_STOPWORDS: List[str] = [
 
 _SUFFIXES = ("ing", "edly", "edly", "ed", "s")
 
-
 def _simple_tokenize(text: str) -> List[str]:
     text = text.lower()
     text = text.replace("\n", " ")
@@ -73,60 +60,29 @@ def _simple_tokenize(text: str) -> List[str]:
     text = text.translate(str.maketrans("", "", string.punctuation))
     return [t for t in text.split(" ") if t]
 
-
 def _simple_stem(token: str) -> str:
     for s in _SUFFIXES:
         if token.endswith(s) and len(token) > len(s) + 2:
             return token[: -len(s)]
     return token
 
-
-def preprocess_text(text: str) -> List[str]:
+# Preprocesses text by tokenizing, removing stopwords, and stemming
+def preprocess_text(text: str) -> str:
     tokens = _simple_tokenize(text or "")
     filtered = [t for t in tokens if t not in _DEFAULT_STOPWORDS]
     stemmed = [_simple_stem(t) for t in filtered]
-    return stemmed
-
-
-_PRODUCTIVE_KEYWORDS = {
-    # English
-    "invoice", "payment", "schedule", "meeting", "follow", "timeline", "deliverable",
-    "proposal", "contract", "update", "report", "deadline", "review", "sync", "plan",
-    "action", "task", "next", "confirm", "confirmat", "call", "agenda", "scope",
-    # Portuguese (pt-BR)
-    "fatura", "boleto", "pagamento", "agenda", "reuniao", "reunião", "marcar",
-    "cronograma", "prazo", "entrega", "entregavel", "entregável",
-    "proposta", "contrato", "atualizacao", "atualização", "relatorio", "relatório",
-    "revisao", "revisão", "alinhamento", "plano", "acao", "ação", "tarefa", "proximo", "próximo",
-    "confirmar", "ligacao", "ligação", "chamada", "pauta", "escopo", "orcamento", "orçamento", "aprovacao", "aprovação",
-}
-
-
-_UNPRODUCTIVE_KEYWORDS = {
-    # English
-    "offer", "discount", "promo", "promotion", "limited", "free", "deal", "buy",
-    "sale", "win", "lottery", "click", "unsubscribe", "coupon", "save",
-    # Portuguese (pt-BR)
-    "oferta", "desconto", "promocao", "promoção", "limitado", "gratis", "grátis", "gratuito", "brinde",
-    "compre", "venda", "ganhe", "sorteio", "clique", "descadastre", "cancelar inscricao", "cancelar inscrição",
-    "cupom", "economize", "spam", "publicidade",
-}
-
+    return " ".join(stemmed)
 
 def classify_productivity(tokens: List[str]) -> str:
-    if not tokens:
-        return "Unproductive"
-    pos = sum(1 for t in tokens if t in _PRODUCTIVE_KEYWORDS)
-    neg = sum(1 for t in tokens if t in _UNPRODUCTIVE_KEYWORDS)
-    score = pos - neg
-    return "Productive" if score >= 1 else "Unproductive"
+    return "Unproductive"
+
 
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 GEMINI_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 
-
+# Calls Gemini API to generate a suggested reply for an email
 async def generate_suggested_reply_via_gemini(content: str, classification: str) -> str:
     if not GEMINI_API_KEY:
         return (
@@ -160,8 +116,7 @@ async def generate_suggested_reply_via_gemini(content: str, classification: str)
     }
 
     params = {"key": GEMINI_API_KEY}
-    timeout = httpx.Timeout(15.0, connect=5.0)
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient() as client:
         resp = await client.post(GEMINI_ENDPOINT, params=params, json=payload)
         if resp.status_code != 200:
             return (
@@ -188,7 +143,7 @@ async def generate_suggested_reply_via_gemini(content: str, classification: str)
                 else "No response recommended."
             )
 
-
+# Calls Gemini API to classify an email as Productive or Unproductive
 async def classify_via_gemini(content: str) -> str:
     """Ask Gemini to classify the email as Productive or Unproductive.
     Returns one of {"Productive", "Unproductive"} or raises on request failure.
@@ -212,8 +167,7 @@ async def classify_via_gemini(content: str) -> str:
     }
 
     params = {"key": GEMINI_API_KEY}
-    timeout = httpx.Timeout(15.0, connect=5.0)
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient() as client:
         resp = await client.post(GEMINI_ENDPOINT, params=params, json=payload)
         resp.raise_for_status()
         data = resp.json()
@@ -229,28 +183,37 @@ async def classify_via_gemini(content: str) -> str:
         # Fallback if unclear
         return "Unproductive"
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
+# Main entry point for processing an email: preprocess, classify, and suggest reply
 async def process_email(email_id: str, title: str, content: str) -> Dict[str, str]:
-    # Preprocess to satisfy NLP requirement
-    tokens = preprocess_text(f"{title}\n\n{content}")
+    logging.debug(f"[process_email] Start processing email_id={email_id}")
+    logging.debug(f"[process_email] Title: {title}")
+    logging.debug(f"[process_email] Content: {content}")
 
-    # Primary: classify via Gemini; fallback to local keyword heuristic
-    try:
-        classification = await classify_via_gemini(content)
-    except Exception:
-        classification = classify_productivity(tokens)
+    # Preprocess content: remove stopwords and apply stemming/lemmatization
+    processed_content = preprocess_text(f"{title}\n\n{content}")
+    logging.debug(f"[process_email] Processed content: {processed_content}")
 
-    # Suggest reply via Gemini with fallback
     try:
-        suggested_reply = await generate_suggested_reply_via_gemini(content, classification)
-    except Exception:
+        logging.debug("[process_email] Calling classify_via_gemini API...")
+        classification = await classify_via_gemini(processed_content)
+        logging.debug(f"[process_email] classify_via_gemini result: {classification}")
+    except Exception as e:
+        logging.error(f"[process_email] classify_via_gemini failed: {e}")
+        classification = "AI response error"
+
+    try:
+        logging.debug("[process_email] Calling generate_suggested_reply_via_gemini API...")
+        suggested_reply = await generate_suggested_reply_via_gemini(processed_content, classification)
+        logging.debug(f"[process_email] generate_suggested_reply_via_gemini result: {suggested_reply}")
+    except Exception as e:
+        logging.error(f"[process_email] generate_suggested_reply_via_gemini failed: {e}")
         await asyncio.sleep(0.1)
-        suggested_reply = (
-            "Thanks for the message. I will review and follow up with next steps shortly."
-            if classification == "Productive"
-            else "No response recommended."
-        )
+        suggested_reply = "AI response error"
 
+    logging.debug(f"[process_email] Done. classification={classification}, suggested_reply={suggested_reply}")
     return {"classification": classification, "suggested_reply": suggested_reply}
 
 

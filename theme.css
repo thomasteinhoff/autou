@@ -1,0 +1,107 @@
+:root {
+  --color-primary: #E2A16F;
+  --color-bg: #FFF0DD;
+  --color-muted: #D1D3D4;
+  --color-accent: #86B0BD;
+  --color-header-bg: var(--color-bg);
+  --color-header-text: #222;
+  --color-btn-bg: var(--color-primary);
+  --color-btn-text: #fff;
+  --color-border: var(--color-muted);
+}
+
+body {
+  background: var(--color-bg);
+  color: #222;
+}
+
+header {
+  background: var(--color-header-bg);
+  color: var(--color-header-text);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.btn,
+.header-btn {
+  background: var(--color-btn-bg);
+  color: var(--color-btn-text);
+  border: none;
+  border-radius: 6px;
+  padding: 0.5em 1em;
+  margin: 0 0.25em;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background 0.2s;
+}
+
+.btn:hover,
+.header-btn:hover .button-top {
+  background: #d18c4a;
+}
+
+/* Theme: dark */
+body.theme-dark {
+  background: #222;
+  color: #fff;
+}
+
+body.theme-dark header {
+  background: #111;
+  color: #fff;
+  border-bottom: 1px solid #444;
+}
+
+body.theme-dark .btn,
+body.theme-dark .header-btn .button-top {
+  background: #444;
+  color: #fff;
+}
+
+
+body.theme-dark .btn:hover,
+body.theme-dark .header-btn:hover .button-top {
+  background: #222;
+}
+
+/* Header button styles */
+.header-btn {
+  --button_radius: 0.75em;
+  --button_color: var(--color-btn-bg);
+  --button_outline_color: #000000;
+  font-size: 14px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--button_radius);
+  background: var(--button_outline_color);
+  padding: 0;
+}
+
+.header-btn .button-top {
+  display: block;
+  box-sizing: border-box;
+  border: 2px solid var(--button_outline_color);
+  border-radius: var(--button_radius);
+  padding: 0.5em 1em;
+  background: var(--button_color);
+  color: var(--color-btn-text);
+  transform: translateY(-0.2em);
+  transition: transform 0.1s ease;
+}
+
+.header-btn:hover .button-top {
+  transform: translateY(-0.33em);
+}
+
+.header-btn:active .button-top {
+  transform: translateY(0);
+}
+
+body.theme-dark .header-btn {
+  --button_outline_color: #fff;
+  --button_color: #444;
+}
+
+body.theme-dark .header-btn .button-top {
+  color: #fff;
+}
