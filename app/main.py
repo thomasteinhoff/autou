@@ -5,8 +5,8 @@ from .api import create_app
 
 app = create_app()
 
-app.mount("/static", StaticFiles(directory=".."), name="static")
+app.mount("/static", StaticFiles(directory="."), name="static")
 
 @app.get("/")
 async def read_root():
-    return FileResponse("../index.html")
+    return FileResponse("index.html")

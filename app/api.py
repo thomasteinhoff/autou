@@ -17,7 +17,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
+    
     @app.post("/emails", response_model=EmailPendingOut)
     async def create_email(payload: EmailIn, background_tasks: BackgroundTasks):
         email_id = str(uuid.uuid4())
