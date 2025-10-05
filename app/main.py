@@ -5,6 +5,8 @@ from .api import create_app
 
 app = create_app()
 
+app.mount("/", StaticFiles(directory=".", html=True), name="static")
+
 @app.get("/")
 async def read_root():
     if os.path.exists("index.html"):
@@ -13,6 +15,3 @@ async def read_root():
         return FileResponse("app/index.html")
     else:
         return {"error": "index.html not found"}
-
-if os.path.exists("."):
-    app.mount("/static", StaticFiles(directory="."), name="static")
