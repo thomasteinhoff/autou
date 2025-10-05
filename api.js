@@ -1,8 +1,8 @@
 (function () {
-  const API_BASE = "http://127.0.0.1:8000";
-
+  const API_BASE = "";
+  
   async function createEmail(title, content) {
-    const res = await fetch(`${API_BASE}/emails`, {
+    const res = await fetch(`/emails`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, content }),
@@ -12,12 +12,10 @@
   }
 
   async function getEmailStatus(id) {
-    const res = await fetch(`${API_BASE}/emails/${id}`);
+    const res = await fetch(`/emails/${id}`);
     if (!res.ok) throw new Error(`Failed to fetch status: ${res.status}`);
     return res.json();
   }
 
   window.API = { createEmail, getEmailStatus };
 })();
-
-
