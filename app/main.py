@@ -1,17 +1,13 @@
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.templating import Jinja2Templates
 import os
-from .api import create_app
 
-app = create_app()
+app = FastAPI()
 
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
+app.mount("/", StaticFiles(directory=".", html=True), name="root")
 
 @app.get("/")
-async def read_root():
-    if os.path.exists("index.html"):
-        return FileResponse("index.html")
-    elif os.path.exists("app/index.html"):
-        return FileResponse("app/index.html")
-    else:
-        return {"error": "index.html not found"}
+async def serve_index():
+    return FileResponse("index.html")

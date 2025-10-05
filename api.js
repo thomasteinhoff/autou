@@ -2,7 +2,7 @@
   const API_BASE = "";
   
   async function createEmail(title, content) {
-    const res = await fetch(`/emails`, {  // Relative URL
+    const res = await fetch(`/emails`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, content }),
@@ -12,7 +12,7 @@
   }
 
   async function getEmailStatus(id) {
-    const res = await fetch(`/emails/${id}`);  // Relative URL
+    const res = await fetch(`/emails/${id}`);
     if (!res.ok) throw new Error(`Failed to fetch status: ${res.status}`);
     return res.json();
   }
