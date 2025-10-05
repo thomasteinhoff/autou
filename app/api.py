@@ -17,10 +17,6 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
-    @app.get("/")
-    async def root():
-        return {"message": "Mail Triage API is running!"}
 
     @app.post("/emails", response_model=EmailPendingOut)
     async def create_email(payload: EmailIn, background_tasks: BackgroundTasks):
